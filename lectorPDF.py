@@ -54,19 +54,24 @@ class OrdenDeCompra:
     __descripcion = []
     __cantidad = []
     __precio_unitario = []
-    
-    CabeceraRemito = {
+    __fecha_entrega = []
+
+
+    CabeceraOrdenDeCompra = {
     'fecha_emision' : '',
-    'fecha_entrega' : '',
     'referencia_oc'    : '',
     'cliente'       : '',
     'campaña'       : '',
     'circuito'      : '',
     'lineas'        : 0 ,
+    'actualizar'    : 0 ,
+    'version'       : 1
     }
 
     def setCodigo(self, codigo_completo):
-        codigo_completo  = codigo_completo.split(" ")[1]
+        if ' ' in codigo_completo: 
+            codigo_completo  = codigo_completo.split(" ")[1]
+
         self.__codigo.append(codigo_completo)
 
     def setDescripcion(self, descripcion):
@@ -74,24 +79,37 @@ class OrdenDeCompra:
         self.__descripcion.append(descripcion)
 
     def setCantidad(self, cantidad):
-        cantidad = cantidad.replace(".", "")
-        int_cantidad = int(cantidad)
-        self.__cantidad.append(int_cantidad)
+        if not isinstance(cantidad, int):
+            cantidad = cantidad.replace(".", "")
+            int_cantidad = int(cantidad)
+            self.__cantidad.append(int_cantidad)
+        else:
+            self.__cantidad.append(cantidad)
     
     def setPrecioUnit(self, precio_unitario):
-        precio_unitario = precio_unitario.replace(",", ".")
-        float_precio_unitario = float(precio_unitario)
-        self.__precio_unitario.append(float_precio_unitario)
+        if isinstance(precio_unitario, str):
+            precio_unitario = precio_unitario.replace(",", ".")
+            self.__precio_unitario.append(float(precio_unitario))
+        if isinstance(precio_unitario, float):
+            self.__precio_unitario.append(precio_unitario)
+
+    def setFechaEntrega(self, fecha_entrega):
+        if '/' in fecha_entrega:
+            fecha_entrega = fecha_entrega.replace('/', '-')
+        self.__fecha_entrega.append(fecha_entrega)
+
 
     def getRegistros(self):
         tmpDict = {}
-        self.CabeceraRemito['lineas'] = len(self.__codigo)
-        tmpDict['cabecera'] = self.CabeceraRemito
+        self.CabeceraOrdenDeCompra['lineas'] = len(self.__codigo)
+        tmpDict['cabecera'] = self.CabeceraOrdenDeCompra
         for index, codigo in enumerate(self.__codigo):
             tmp = {}
+            tmp['codigo'] = codigo
             tmp['descripcion'] = self.__descripcion[index]
             tmp['cantidad'] = self.__cantidad[index]
             tmp['precio_unitario'] = self.__precio_unitario[index]
+            tmp['fecha_entrega'] = self.__fecha_entrega[index]
             tmpDict[index] = tmp 
         return tmpDict
 

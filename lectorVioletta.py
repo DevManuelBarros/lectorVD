@@ -37,11 +37,18 @@ class lectorVioletta:
                 if nTemp != '':
                     result.append(nTemp)
             final.append(result)
+
+        #Fecha Entrega
+        patron_fecha_entrega = re.compile(r'entrega\s\d{2}\.\d{2}\.\d{4}')
+        fecha_entrega = str(patron_fecha_entrega.search(self.newObject.PDFALL).group()).replace('entrega ', '')
+        fecha_entrega = fecha_entrega.replace('.','-')
+        #self.newObj.CabeceraOrdenDeCompra['fecha_entrega'] = fecha_entrega
         for temp in final:
             self.newObj.setCodigo(temp[0])
             self.newObj.setDescripcion(temp[1])
             self.newObj.setCantidad(temp[2])
             self.newObj.setPrecioUnit(temp[4])
+            self.newObj.setFechaEntrega(fecha_entrega)
         self.getHead()
         return self.newObj
 
@@ -53,26 +60,22 @@ class lectorVioletta:
         pCamp = patron_camp.search(texto)
         campana = texto[pCamp.start():pCamp.end()].replace('/','-')
         campana = 'C' + campana
-        self.newObj.CabeceraRemito['campaña'] = campana
-        #Fecha Entrega
-        patron_fecha_entrega = re.compile(r'entrega\s\d{2}\.\d{2}\.\d{4}')
-        fecha_entrega = str(patron_fecha_entrega.search(texto).group()).replace('entrega ', '')
-        fecha_entrega = fecha_entrega.replace('.','-')
-        self.newObj.CabeceraRemito['fecha_entrega'] = fecha_entrega
-        #OrdenCompra.
+        self.newObj.CabeceraOrdenDeCompra['campaña'] = campana
+                #OrdenCompra.
         
         patron_orden_compra =  re.compile(r'\d{10}\/\d')
         arrayOC = str(patron_orden_compra.search(texto).group()).split('/')
-        self.newObj.CabeceraRemito['referencia_oc'] = arrayOC[0]
+        self.newObj.CabeceraOrdenDeCompra['referencia_oc'] = arrayOC[0]
         if arrayOC == '1':
-            self.newObj.CabeceraRemito['circuito'] = 'Facturar'
+            self.newObj.CabeceraOrdenDeCompra['circuito'] = 'Facturar'
         else:
-            self.newObj.CabeceraRemito['circuito'] = 'Consignacion'
+            self.newObj.CabeceraOrdenDeCompra['circuito'] = 'Consignacion'
         #Fecha de Emision
+        self.newObj.CabeceraOrdenDeCompra['cliente'] = 'Violetta'
         patron_fecha_emision = re.compile(r'\/ \d{2}\.\d{2}\.\d{4}')
         fecha_emision = str(patron_fecha_emision.search(texto).group()).replace('/ ', '')
         fecha_emision = fecha_emision.replace('.', '-')
-        self.newObj.CabeceraRemito['fecha_emision'] = fecha_emision
+        self.newObj.CabeceraOrdenDeCompra['fecha_emision'] = fecha_emision
     
     def fullText(self):
         return self.__fullText
