@@ -6,7 +6,7 @@ import re
 class lectorTsu:
 
     __pagina = 0
-    __lineas_producto = []
+    __lineas_productos = []
     #Otros datos
     newObj = OrdenDeCompra()
     newObject = lectorPDF()
@@ -15,8 +15,19 @@ class lectorTsu:
         #self.__pagina = self.newObject.crearSeparador("Número de artículo europeo", almacenar=True)
         self.__pagina = self.newObject.PDFALL.split('CONDICIONES GENERALESLAS CONDI')[0]
         #patron = re.compile('\d{5}-\d.{2,35}\d{2},\d{4}.{1,12}\d{2}\/\d{2}\/d{4}')
-        patron = re.compile(r'\d{5}-\d{1}.{4,30}\d{1,8}?\d{2}\.\d{4}.{2,8}\.\d{2}\d{2}\/\d{2}\/\d{4}')
+        patron = re.compile(r'\d{5}-\d{1}.{4,31}\d{1,8}?\d{2}\.\d{4}.{2,8}\.\d{2}\d{2}\/\d{2}\/\d{4}')
         self.__lineas_productos = patron.findall(self.__pagina)
+        for i, value in enumerate(self.__lineas_productos):
+            self.__lineas_productos[i] = value.replace(',', '')
+            patron_busqueda = re.compile(r'\d\s\d')
+            grupos = patron_busqueda.findall(self.__lineas_productos[i])
+            for item in grupos:
+                new_value= item.replace(' ', '')
+                self.__lineas_productos[i] = self.__lineas_productos[i].replace(item,new_value)
+
+    
+
+        print(f'largo recuperado {len(self.__lineas_productos)}')
         # obtenemos orden de compra
         patron = re.compile(r'\d{6}\s{3,4}\d{1,2}')
         ordencompra = patron.search(self.__pagina).group()
@@ -55,18 +66,23 @@ class lectorTsu:
             self.newObj.setCodigo(item)
         patron = re.compile(r'\d{2,10}\.\d{5}')
         for linea in self.__lineas_productos:
+            print(linea)
             precio_unit = patron.search(linea)
+            
             precio = precio_unit.group()[:-1]
             fecha = patron_fecha.search(linea) 
             monto_total = self.convertir_a_float(linea[precio_unit.end()-1:fecha.start()])
+            print(precio, monto_total)
             cantidad, precio_unitario, cad_descripcion = self.logicNumber(precio, monto_total)
-            #print(cantidad, precio_unitario, cad_descripcion)
+            print(cantidad, precio_unitario, cad_descripcion)
             self.newObj.setFechaEntrega(fecha.group())
             self.newObj.setCantidad(cantidad)
             self.newObj.setPrecioUnit(precio_unitario)
             fin_descripcion = precio.replace(cad_descripcion, '',  1)
             fin = linea.index(str(fin_descripcion))
+            
             descripcion = linea[7:fin] 
+            print(fin, descripcion)
             self.newObj.setDescripcion(descripcion)
 
 
@@ -100,9 +116,10 @@ class lectorTsu:
 
 
     def convertir_a_float(self, texto):
+        texto = texto.replace(' ', '')
         texto = texto.replace(',', '')
         return float(texto)
 
-o = lectorTsu(ruta='OC01.pdf')
+o = lectorTsu(ruta='D:\dd\lectPDF\OC01.pdf')
 
 

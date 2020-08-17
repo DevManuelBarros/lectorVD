@@ -87,6 +87,7 @@ class OrdenDeCompra:
             self.__cantidad.append(cantidad)
     
     def setPrecioUnit(self, precio_unitario):
+        print(precio_unitario)
         if isinstance(precio_unitario, str):
             precio_unitario = precio_unitario.replace(",", ".")
             self.__precio_unitario.append(float(precio_unitario))
