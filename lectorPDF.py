@@ -75,7 +75,7 @@ class OrdenDeCompra:
         self.__codigo.append(codigo_completo)
 
     def setDescripcion(self, descripcion):
-        descripcion = descripcion.strip()
+        print(descripcion)
         self.__descripcion.append(descripcion)
 
     def setCantidad(self, cantidad):

@@ -6,17 +6,28 @@ import re
 class lectorTsu:
 
     __pagina = 0
-    __lineas_producto = []
+    __lineas_productos = []
     #Otros datos
-    newObj = OrdenDeCompra()
-    newObject = lectorPDF()
-    def __init__(self, ruta):
+    newObj = 0
+    newObject = 0
+    def __init__(self, ruta, num_cliente=1):
+        self.newObj = OrdenDeCompra()
+        self.newObject = lectorPDF()
         self.newObject.cargarArchivo(ruta=ruta)
         #self.__pagina = self.newObject.crearSeparador("Número de artículo europeo", almacenar=True)
         self.__pagina = self.newObject.PDFALL.split('CONDICIONES GENERALESLAS CONDI')[0]
         #patron = re.compile('\d{5}-\d.{2,35}\d{2},\d{4}.{1,12}\d{2}\/\d{2}\/d{4}')
-        patron = re.compile(r'\d{5}-\d{1}.{4,30}\d{1,8}?\d{2}\.\d{4}.{2,8}\.\d{2}\d{2}\/\d{2}\/\d{4}')
+        patron = re.compile(r'\d{5}-\d{1}.{4,33}\d{1,8}?\d{2}\.\d{4}.{2,8}\.\d{2}\d{2}\/\d{2}\/\d{4}')
         self.__lineas_productos = patron.findall(self.__pagina)
+        for i, value in enumerate(self.__lineas_productos):
+            self.__lineas_productos[i] = value.replace(',', '')
+            # en versiones viejas hay problemas de separación de espacio vacios entre los 
+            # números con esto lo resolvemos.
+            patron_busqueda = re.compile(r'\d\s\d')
+            grupos = patron_busqueda.findall(self.__lineas_productos[i])
+            for item in grupos:
+                new_value= item.replace(' ', '')
+                self.__lineas_productos[i] = self.__lineas_productos[i].replace(item,new_value)
         # obtenemos orden de compra
         patron = re.compile(r'\d{6}\s{3,4}\d{1,2}')
         ordencompra = patron.search(self.__pagina).group()
@@ -28,7 +39,8 @@ class lectorTsu:
         # fecha emision.
         patron = re.compile(r'\d{8}')
         fecha_emision = patron.search(self.__pagina).group()
-        fecha_emision = fecha_emision[0:2] + '-' + fecha_emision[2:4] + '-' + fecha_emision[4:]
+        #fecha_emision = fecha_emision[0:2] + '-' + fecha_emision[2:4] + '-' + fecha_emision[4:]
+        fecha_emision = fecha_emision[4:] + '-' + fecha_emision[2:4] + '-' + fecha_emision[0:2]
         circuito = 'Facturar'
         # obtenemos la campaña
         patron = re.compile(r'\d{4}-\d{2}')
@@ -38,10 +50,13 @@ class lectorTsu:
         self.newObj.CabeceraOrdenDeCompra['campaña'] = campana
         self.newObj.CabeceraOrdenDeCompra['fecha_emision'] = fecha_emision
         self.newObj.CabeceraOrdenDeCompra['circuito'] = 'Facturar'
-        self.newObj.CabeceraOrdenDeCompra['cliente'] = 'Tsu'
+        self.newObj.CabeceraOrdenDeCompra['cliente'] = num_cliente
         self.obtenerLineas()
-        print(self.newObj.getRegistros())
+        #print(self.newObj.getRegistros())
 
+    def get_registros(self):
+        return self.newObj.getRegistros()
+        
     def separar_orden_compra(self, ordencompra):
         separado = ordencompra.split(' ')
         return separado[0], separado[-1]
@@ -81,6 +96,9 @@ class lectorTsu:
         inicio = str(inicio) # lo convertimos a str para trabajarlo
         for i in range(len(inicio), 0, -1): # comenzamos a recorrerlo de forma inversa
             numero_prueba = float(inicio[i:] + '.' + resto) # extraemos los números para comenzar a realizar las pruebas-
+            # por si queda en cero.
+            if numero_prueba == 0:
+                numero_prueba = 1
             a_buscar = int(round(total / numero_prueba,0)) # comprobamos si este número de prueba dar el resultado que buscamos.
             #print(f'total: {total} / precio hipotetico: {numero_prueba} = {a_buscar}')
             if str(a_buscar) in inicio[:i]:       # si entra aquí la división es correcta por lo que podemos concluir que la extración 
@@ -89,11 +107,10 @@ class lectorTsu:
         return 0,0,'Error' # Si esta retornando acá claramente hay un error en todo el proceso.
 
 
-
-
-
-
-
+    def convertir_a_float(self, texto):
+        texto = texto.replace(' ', '')
+        texto = texto.replace(',', '')
+        return float(texto)
 
 
 
@@ -103,6 +120,6 @@ class lectorTsu:
         texto = texto.replace(',', '')
         return float(texto)
 
-o = lectorTsu(ruta='OC01.pdf')
+o = lectorTsu(ruta='OC02.pdf')
 
-
+print(o.get_registros())
